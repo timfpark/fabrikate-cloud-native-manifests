@@ -9,7 +9,7 @@ kind: ConfigMap
 metadata:
   labels:
     app: kibana
-    chart: kibana-1.5.2
+    chart: kibana-2.0.0
     heritage: Tiller
     release: kibana
   name: kibana
@@ -21,7 +21,7 @@ kind: Service
 metadata:
   labels:
     app: kibana
-    chart: kibana-1.5.2
+    chart: kibana-2.0.0
     heritage: Tiller
     release: kibana
   name: kibana
@@ -42,7 +42,7 @@ kind: Deployment
 metadata:
   labels:
     app: kibana
-    chart: kibana-1.5.2
+    chart: kibana-2.0.0
     heritage: Tiller
     release: kibana
   name: kibana
@@ -53,14 +53,14 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 78565c22e262ce747c2a693ca7c2f23a2b0ead2a530a83647e1729d88db3e9e5
+        checksum/config: ad1caffdd25e79c58567e996d861248f3f55b4bd56b80e610587c2aa5998e71b
       labels:
         app: kibana
         release: kibana
     spec:
       containers:
       - env: null
-        image: docker.elastic.co/kibana/kibana-oss:6.6.0
+        image: docker.elastic.co/kibana/kibana-oss:6.6.1
         imagePullPolicy: IfNotPresent
         name: kibana
         ports:

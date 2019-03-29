@@ -24,11 +24,10 @@ data:
 kind: ConfigMap
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    heritage: Tiller
-    jaeger-infra: common-configmap
-    release: jaeger
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger
   namespace: jaeger
 
@@ -37,12 +36,11 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: agent
-    heritage: Tiller
-    jaeger-infra: agent-service
-    release: jaeger
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-agent
   namespace: jaeger
 spec:
@@ -64,10 +62,9 @@ spec:
     protocol: TCP
     targetPort: 5778
   selector:
-    app: jaeger
-    component: agent
-    jaeger-infra: agent-instance
-    release: jaeger
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/name: jaeger
   type: ClusterIP
 
 ---
@@ -75,12 +72,11 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: collector
-    heritage: Tiller
-    jaeger-infra: collector-service
-    release: jaeger
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-collector
   namespace: jaeger
 spec:
@@ -98,10 +94,9 @@ spec:
     protocol: TCP
     targetPort: zipkin
   selector:
-    app: jaeger
-    component: collector
-    jaeger-infra: collector-pod
-    release: jaeger
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/name: jaeger
   type: ClusterIP
 
 ---
@@ -109,12 +104,11 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: query
-    heritage: Tiller
-    jaeger-infra: query-service
-    release: jaeger
+    app.kubernetes.io/component: query
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-query
   namespace: jaeger
 spec:
@@ -124,33 +118,35 @@ spec:
     protocol: TCP
     targetPort: 16686
   selector:
-    app: jaeger
-    component: query
-    jaeger-infra: query-pod
-    release: jaeger
+    app.kubernetes.io/component: query
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/name: jaeger
   type: ClusterIP
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: agent
-    heritage: Tiller
-    jaeger-infra: agent-daemonset
-    release: jaeger
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-agent
   namespace: jaeger
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: agent
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/name: jaeger
   template:
     metadata:
       labels:
-        app: jaeger
-        component: agent
-        jaeger-infra: agent-instance
-        release: jaeger
+        app.kubernetes.io/component: agent
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/name: jaeger
     spec:
       containers:
       - env:
@@ -159,7 +155,7 @@ spec:
             configMapKeyRef:
               key: collector.host-port
               name: jaeger
-        image: jaegertracing/jaeger-agent:1.9.0
+        image: jaegertracing/jaeger-agent:1.10.0
         imagePullPolicy: IfNotPresent
         name: jaeger-agent
         ports:
@@ -182,29 +178,34 @@ spec:
       nodeSelector: {}
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: collector
-    heritage: Tiller
-    jaeger-infra: collector-deployment
-    release: jaeger
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-collector
   namespace: jaeger
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: collector
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/name: jaeger
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: jaeger
-        component: collector
-        jaeger-infra: collector-pod
-        release: jaeger
+        app.kubernetes.io/component: collector
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/name: jaeger
     spec:
       containers:
       - env:
@@ -243,7 +244,7 @@ spec:
             configMapKeyRef:
               key: collector.zipkin.http-port
               name: jaeger
-        image: jaegertracing/jaeger-collector:1.9.0
+        image: jaegertracing/jaeger-collector:1.10.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -279,29 +280,32 @@ spec:
       restartPolicy: Always
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: jaeger
-    chart: jaeger-0.8.3
-    component: query
-    heritage: Tiller
-    jaeger-infra: query-deployment
-    release: jaeger
+    app.kubernetes.io/component: query
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
   name: jaeger-query
   namespace: jaeger
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: query
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/name: jaeger
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: jaeger
-        component: query
-        jaeger-infra: query-pod
-        release: jaeger
+        app.kubernetes.io/component: query
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/name: jaeger
     spec:
       containers:
       - env:
@@ -340,7 +344,7 @@ spec:
             configMapKeyRef:
               key: query.base-path
               name: jaeger
-        image: jaegertracing/jaeger-query:1.9.0
+        image: jaegertracing/jaeger-query:1.10.0
         imagePullPolicy: IfNotPresent
         name: jaeger-query
         ports:
@@ -360,4 +364,69 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector: {}
       restartPolicy: Always
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/component: spark
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: jaeger
+    helm.sh/chart: jaeger-0.9.0
+  name: jaeger-spark
+  namespace: jaeger
+spec:
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: spark
+            app.kubernetes.io/instance: jaeger
+            app.kubernetes.io/name: jaeger
+        spec:
+          containers:
+          - env:
+            - name: STORAGE
+              valueFrom:
+                configMapKeyRef:
+                  key: span-storage.type
+                  name: jaeger
+            - name: ES_NODES
+              valueFrom:
+                configMapKeyRef:
+                  key: es.server-urls
+                  name: jaeger
+            - name: ES_NODES_WAN_ONLY
+              valueFrom:
+                configMapKeyRef:
+                  key: es.nodes-wan-only
+                  name: jaeger
+            - name: ES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: es.password
+                  name: jaeger
+            - name: ES_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: es.username
+                  name: jaeger
+            image: jaegertracing/spark-dependencies:latest
+            imagePullPolicy: Always
+            name: jaeger-spark
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 256m
+                memory: 128Mi
+          nodeSelector: {}
+          restartPolicy: OnFailure
+  schedule: 49 23 * * *
+  successfulJobsHistoryLimit: 5
 
